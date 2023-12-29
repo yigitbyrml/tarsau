@@ -11,6 +11,7 @@ void tarsau_b(int argc, char *argv[],char *outputf){
         if(strcmp(argv[i],"-o") == 0){
             i++;
             fprintf(outputfs,"\n");
+            break;
         }
 
         FILE *inputfs;
@@ -18,15 +19,21 @@ void tarsau_b(int argc, char *argv[],char *outputf){
         fseek(inputfs,0,SEEK_END);
         int file_size = ftell(inputfs);
         fseek(inputfs,0,SEEK_SET);
-        if(i != argc-1){
+
         char record[256];
         sprintf(record, "|%s,%o,%d|", argv[i], 0644, file_size); 
 
         fwrite(record, 1, strlen(record), outputfs);
+
+        if(i==argc-1){
+            fprintf(outputfs,"\n");
         }
+        fclose(inputfs);
+
     }
 
     int total_size = 0;
+    
 
     for(int i=2;i<argc;i++){
 
@@ -46,7 +53,7 @@ void tarsau_b(int argc, char *argv[],char *outputf){
         int ch_size;
         while ((ch_size = fgetc(inputfs)) != EOF){
 
-            if(ch_size - 81 > 127){
+            if(ch_size > 127){
                 printf("%s error : input character must be ASCII format \n",argv[i]);
                 fclose(inputfs);
                 fclose(outputfs);
@@ -83,6 +90,12 @@ void tarsau_b(int argc, char *argv[],char *outputf){
 void tarsau_a(char *archive_file, char *output_directory) {
     FILE *in_fp = fopen(archive_file, "r");
     if (in_fp == NULL) {
+        printf("Archive file is inappropriate or corrupt!\n");
+        return;
+    }
+
+    int filelen = strlen(archive_file);
+    if(filelen < 4 || strcmp(archive_file + filelen - 4, ".sau") != 0){
         printf("Archive file is inappropriate or corrupt!\n");
         return;
     }
@@ -168,41 +181,45 @@ void tarsau_a(char *archive_file, char *output_directory) {
 }
 
 int main(int argc, char *argv[]) {
-if((argc<3 && (strcmp(argv[1],"-b") || strcmp(argv[1],"-a"))) != 0){
-printf("You must use tarsau -b input files or tarsau -a input files\n");
-return 0;
-}
+    if((strcmp(argv[1],"-b") && strcmp(argv[1],"-a")) != 0){
+        printf("You must use tarsau -b input files or tarsau -a input files\n");
+        return 0;
+    }
 
 
+    if(argc<3){
+        printf("You must input more than 2\n");
+        return 0;
+    }
 
-char *outputf="a.sau";
+    char *outputf="a.sau";
 
-char *archive_file = argv[2];
-char *output_directory = argv[3];
+    char *archive_file = argv[2];
+    char *output_directory = argv[3];
 
-for(int i=2;i<argc;i++){
-if(strcmp(argv[i],"-o") == 0){
-if(argv[i+1] != NULL){
-outputf=argv[i+1];
-i++;
-}
-else{
-printf("error: missing filename after ‘-o’\n");
-return 0;
-}
-}
-}
-if(strcmp(argv[1],"-b")==0){
-    if(argc >= 32){
-    printf("The number of input files cannot be more than 32\n");
+    for(int i=2;i<argc;i++){
+    if(strcmp(argv[i],"-o") == 0){
+        if(argv[i+1] != NULL){
+            outputf=argv[i+1];
+            i++;
+        }
+    else{
+        printf("error: missing filename after ‘-o’\n");
+        return 0;
+    }
+    }
+    }
+    if(strcmp(argv[1],"-b")==0){
+        if(argc >= 32){
+        printf("The number of input files cannot be more than 32\n");
+        return 1;
+    }
+    tarsau_b(argc,argv,outputf);
+    }
+    else if(strcmp(argv[1],"-a")==0){
+        tarsau_a(archive_file,output_directory);
+    }
+
     return 1;
-}
-tarsau_b(argc,argv,outputf);
-}
-else if(strcmp(argv[1],"-a")==0){
-    tarsau_a(archive_file,output_directory);
-}
-
-return 1;
 }
 
