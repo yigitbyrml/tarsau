@@ -38,7 +38,7 @@ void tarsau_b(int argc, char *argv[],char *outputf){
     for(int i=2;i<argc;i++){
 
         if(strcmp(argv[i],"-o") == 0){
-            i++;
+            break;
         }
 
         FILE *inputfs;
