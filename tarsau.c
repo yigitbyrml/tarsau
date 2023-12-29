@@ -211,12 +211,16 @@ int main(int argc, char *argv[]) {
     }
     if(strcmp(argv[1],"-b")==0){
         if(argc >= 32){
-        printf("The number of input files cannot be more than 32\n");
-        return 1;
-    }
-    tarsau_b(argc,argv,outputf);
+        printf("ERROR Tarsau -b : The number of input files cannot be more than 32\n");
+        return 0;
+        }
+        tarsau_b(argc,argv,outputf);
     }
     else if(strcmp(argv[1],"-a")==0){
+        if(argc >4){
+            printf("ERROR Tarsau -a : The number of input files cannot be more than 4\n");
+            return 0;
+        }
         tarsau_a(archive_file,output_directory);
     }
 
